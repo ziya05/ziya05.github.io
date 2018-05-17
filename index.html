@@ -1,0 +1,13 @@
+---
+layout: default
+title: 在这个大时代， 身为一个IT从业者，我还能做点什么呢
+---
+
+<h2>{{page.title}}</h2>
+<p>生命的感悟</p>
+<ul>
+	{% for sensible in site.sensible %}
+		<li>{{sensible.date | date_to_string}} <a href="{{site.baseurl}}{{sensible.url}}">
+		{{sensible.title}}</a></li>
+	{% endfor %}
+</ul>
