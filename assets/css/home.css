@@ -118,3 +118,25 @@ a {
 	background: #fff url('/assets/img/people1.jpg') bottom right no-repeat;
 	background-size: auto 100%;
 }
+
+.link-list {
+	list-style: none;
+	margin-left: 50px;
+	margin-top: 0;
+	padding-top: 100px;
+}
+
+.link-list > li {
+	float: left;
+	margin-right: 50px;
+}
+
+.link-img, .link-text {
+	vertical-align: middle;
+}
+
+.link-img {
+	width: 50px;
+	height: 50px;
+}
+
