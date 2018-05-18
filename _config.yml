@@ -1,6 +1,6 @@
 layout: default
 excerpt_separator: <!--more-->
-permalink: none
+permalink: /:categories/:title
 
 baseurl: /
 title: Welcome to the ziya05's homepage!
