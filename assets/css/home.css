@@ -80,16 +80,16 @@ body {
 
 .block {
 	float: left;
-	width: 180px;
-	margin: 10px;
-	padding: 10px;
+	margin: 15px;
+	padding: 15px;
 	background-color: #fff;
 	border: 1px solid #ccc;
 	overflow: hidden;
 }
 
 .block-content {
-	height: 130px;
+	width: 220px;
+	height: 150px;
 	overflow: hidden;
 }
 
@@ -109,6 +109,7 @@ a {
 
 #footer {
 	height: 200px;
+	margin-top: 50px;
 	background: #fff url('/assets/img/people1.jpg') bottom right no-repeat;
 	background-size: auto 100%;
 }
