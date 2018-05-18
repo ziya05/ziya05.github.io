@@ -1,4 +1,8 @@
-theme: jekyll-theme-architect
-baseurl: /ziya05
+layout: default
+excerpt_separator: <!--more-->
+permalink: none
+
+baseurl: /
 title: Welcome to the ziya05's homepage!
 description: learning, researching, exploring, sharing
+

@@ -1,0 +1,39 @@
+---
+layout: default
+title: hi 你好
+---
+
+范德萨发生口角哦怕
+的时间范围哦
+<!--more-->
+呃呃呃
+
+<h2>{{page.title}}</h2>
+<p>我来看看这个奇怪的世界</p>
+<p>{{page.date | date_to_string}}</p>
+
+<p>
+	{% highlight ruby linenos %}
+	def show
+		@widget = Widget(params[:id])
+  		respond_to do |format|
+    		format.html # show.html.erb
+    		format.json { render json: @widget }
+  		end
+	end
+	{% endhighlight %}
+</p>
+
+<p>
+	{% highlight html %}
+		<h1>基础样式</h1>
+<ul>
+    <li><a href="{{ site.baseurl }}/ui/typeface.html">文本</a></li>
+    <li><a href="{{ site.baseurl }}/ui/icon.html">图标</a></li>
+    <li><a href="{{ site.baseurl }}/ui/grid.html">网格</a></li>
+    <li><a href="{{ site.baseurl }}/ui/border.html">边框</a></li>
+    <li><a href="{{ site.baseurl }}/ui/layout.html">布局</a></li>
+</ul>
+
+	{% endhighlight %}
+</p>
