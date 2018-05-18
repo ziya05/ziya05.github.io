@@ -4,7 +4,8 @@ layout: default
 
 {{content}}
 
-{{ if (.Params.gitment) }}
+{{ if ( page.gitment == "true") }}
+
 <div style="margin:100px 0;">
 	<div id="git-comments"></div>
 	<!-- 英文
@@ -16,7 +17,7 @@ layout: default
 
 	<script>
 	  var gitment = new Gitment({
-	    id: '{{ .slug }}',  // 可选, 默认为 location.href
+	    id: '{{ page.slug }}',  // 可选, 默认为 location.href
 	    owner: 'ziya05',
 	    repo: 'comments',
 	    oauth: {
@@ -27,4 +28,4 @@ layout: default
 	  gitment.render('git-comments')
 	</script>
 </div>
-{{ end }}
+{{ endif }}
