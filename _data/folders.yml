@@ -1,4 +1,4 @@
 - name: program
-  list: [base, spark, java, css]
+  list: [base, spark, java, css, jekyll]
 - name: life
   list: [family, work]
