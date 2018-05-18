@@ -78,6 +78,7 @@ body {
 }
 
 .block {
+	height: 150px;
 	float: left;
 	margin: 15px;
 	padding: 15px;
@@ -85,9 +86,28 @@ body {
 	overflow: hidden;
 }
 
+@media screen and (min-width: 1200px) {
+	.block {
+		width: calc(33% - 30px);
+		min-width: 220px;
+	}
+}
+
+@media screen and (max-width: 1200px) {
+	.block {
+		width: calc(50% - 30px);
+		min-width: 220px;
+	}
+}
+
+@media screen and (max-width: 500px) {
+	.block {
+		width: calc(100% - 30px);
+		min-width: 220px;
+	}
+}
+
 .block-content {
-	width: 220px;
-	height: 150px;
 	overflow: hidden;
 }
 
@@ -110,6 +130,11 @@ a {
 .article-description {
 	margin-top: 10px;
 	font-size: 14px;
+	color: #888;
+}
+
+.block-content:hover > .article-description {
+	color: #333;
 }
 
 #footer {
