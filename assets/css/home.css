@@ -4,10 +4,14 @@ html, body {
 	font-size: 20px;
 }
 
-body {
+/*body {
 	background: url('/assets/img/5930de4d14f09.png') fixed bottom left no-repeat,
 				url('/assets/img/lamp.jpg') fixed center right no-repeat;
 	background-size: auto 30%;
+} */
+body {
+	background: url('/assets/img/bg.jpg') fixed top left no-repeat;
+	background-size: 100% 100%;
 }
 
 #banner {
