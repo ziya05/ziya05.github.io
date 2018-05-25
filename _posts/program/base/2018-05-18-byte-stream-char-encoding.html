@@ -5,6 +5,7 @@ description: 编码问题在任何语言、程序中无处不在，就在我们�
 categories: [program, base]
 slug: byteStreamCharEncoding
 gitment: true
+title_color: '#BB5500'
 ---
 
 <h2>{{ page.title }}</h2>
@@ -480,6 +481,19 @@ o
 <p class="stage">
 	<h3 class="subtitle3">问题该如何解决</h3>
 	<div class="stage-content">
+		<p>
+			从编码的本质看，原文件属于UCS-2 LE BOM编码(Nodepad++), 而spark的读取文件使用的编码是UTF-8，所以导致显示错误。
+		</p>
+		<p>
+			那么从理论上说，将spark获取到的文本通过UTF-8编码进行解码为字节流后，
+			在使用UCS-2 LE应该可以实现，但是经测试，仍然不对。
+		</p>
+		<p>
+			关于在java中的相关实验，待完成；
+		</p>
+		<p>
+			关于在spark中最终解决该问题，待完成；
+		</p>
 	</div>
 </p>
 

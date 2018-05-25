@@ -47,13 +47,15 @@ body {
 
 #banner .title{
 	display: none;
-	font-family: "Comic Sans MS", cursive, sans-serif;
+	font-family: Marker Felt, fantasy;
 	background-color: white;
 	/*font-size: 35px;*/
 }
 
 #banner .description {
-	font-size: 24px;
+	font-family: "Helvetica Neue",Helvetica,Arial,"Microsoft Yahei","Hiragino Sans GB","Heiti SC","WenQuanYi Micro Hei",sans-serif;
+	font-size: 20px;
+	font-weight: bolder;
 }
 
 #center {
@@ -92,6 +94,8 @@ body {
 	background: rgb(242, 242, 242) url('/assets/img/small-green-tree.jpg') top left no-repeat;
 	background-size: 200px auto;
 	background-position: -60px 50%;
+	color: #CC0000;
+	font-weight: bolder;
 }
 
 .block {
@@ -103,23 +107,27 @@ body {
 	overflow: hidden;
 }
 
-@media screen and (min-width: 1200px) {
+@media screen and (min-width: 1600px) {
 	.block {
-		width: calc(33% - 30px);
-		min-width: 220px;
+		width: calc(22% - 30px);
+	}
+}
+
+@media screen and (max-width: 1600px) {
+	.block {
+		width: calc(30% - 30px);
 	}
 }
 
 @media screen and (max-width: 1200px) {
 	.block {
-		width: calc(50% - 30px);
-		min-width: 220px;
+		width: calc(45% - 30px);
 	}
 }
 
 @media screen and (max-width: 500px) {
 	.block {
-		width: calc(100% - 30px);
+		width: calc(100%);
 		min-width: 220px;
 	}
 }
@@ -142,6 +150,7 @@ a {
 	/*white-space: nowrap;*/
 	overflow: hidden;
 	border-bottom: 2px solid #ccc;
+	font-weight: bold;
 }
 
 .article-description {

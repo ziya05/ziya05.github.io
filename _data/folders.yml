@@ -1,4 +1,4 @@
 - name: program
-  list: [base, spark, java, css, jekyll]
+  list: [base, spark, java, css, website]
 - name: life
-  list: [family, work]
+  list: [english, family, work]
