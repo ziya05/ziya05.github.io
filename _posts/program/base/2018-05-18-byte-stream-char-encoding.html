@@ -10,6 +10,521 @@ gitment: true
 <h2>{{ page.title }}</h2>
 
 <p class="stage">
-	<h3 class="subtitle">一个奇怪的问题</h3>
-	<div class="content">在前几天的一个艳阳高照的日子，风和日丽，朗朗乾坤，万里无云，岁月一片静好</div>
+	<h3 class="subtitle3">遇到了一个奇怪的问题</h3>
+	<div class="stage-content">
+		这几天在用spark写程序，从一些字幕文件中提取相关字幕，但是在过滤所需要的文本的时候，却总是不对.
+	</div>
+	<div class="stage-content">
+		以下是源文件的格式：
+	</div>
+	<div class="code">
+		{% highlight Scheme %}
+...
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Default,Microsoft YaHei,22,&H00FFFFFF,&HF0000000,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,0,2,30,30,5,134
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:02.07,0:00:04.32,Default,NTP,0000,0000,0000,,《老友记》第二季第一集  罗斯的新女友
+Dialogue: 0,0:00:49.08,0:00:52.36,Default,NTP,0000,0000,0000,,{\fn微软雅黑}{\fs14}{\b0}{\c&HFFFFFF&&}{\3c&000000&}{\4c&H000000&}Flight number 457 from Beijing now arriving.
+Dialogue: 0,0:00:58.42,0:00:59.35,Default,NTP,0000,0000,0000,,{\fn微软雅黑}{\fs14}{\b0}{\c&HFFFFFF&&}{\3c&000000&}{\4c&H000000&}Oh, my God!
+Dialogue: 0,0:01:00.44,0:01:01.32,Default,NTP,0000,0000,0000,,{\fn微软雅黑}{\fs14}{\b0}{\c&HFFFFFF&&}{\3c&000000&}{\4c&H000000&}Oh, my God!
+Dialogue: 0,0:01:02.65,0:01:03.49,Default,NTP,0000,0000,0000,,{\fn微软雅黑}{\fs14}{\b0}{\c&HFFFFFF&&}{\3c&000000&}{\4c&H000000&}Excuse me.
+Dialogue: 0,0:01:03.54,0:01:05.02,Default,NTP,0000,0000,0000,,{\fn微软雅黑}{\fs14}{\b0}{\c&HFFFFFF&&}{\3c&000000&}{\4c&H000000&}Move, move, move! Emergency, please!
+Dialogue: 0,0:01:05.02,0:01:06.51,Default,NTP,0000,0000,0000,,{\fn微软雅黑}{\fs14}{\b0}{\c&HFFFFFF&&}{\3c&000000&}{\4c&H000000&}Excuse me, excuse me.
+...
+{% endhighlight %}
+	</div>
+
+	<div class="stage-content">
+		而我想做的就是读取文本之后，获得以Dialogue开头的行， scala的代码如下：
+	</div>
+	<div class="code">
+		{% highlight scala %}
+import org.apache.spark.sql.functions.input_file_name
+
+object ChangEncoding {
+  def main(args:Array[String]):Unit = {
+    val spark = SparkSession
+      .builder()
+      .master("local")
+      .appName("ChangEncoding")
+      .getOrCreate()
+
+    import spark.implicits._
+    val ds = spark.read
+      .text(s"${Constants.HDFS}friends/ass/*S02E02.eng.ass")
+        .select(input_file_name, $"value")
+        .as[(String, String)]
+
+    val dialogueDs = ds.filter(x => x._2.startsWith("Dialogue"))
+
+    println(ds.collect().length)            //694
+    println(dialogueDs.collect().length)    //0
+    {% endhighlight %}
+	</div>
+
+	<div class="stage-content">
+		然后我又取了第一行数据，输出，问题不太明显，而在循环输出第一行每个字符的时候，
+		问题很清楚了，是编码的问题：
+	</div>
+	<div class="code">
+	{% highlight scala %}
+println(ds.first()._2)
+ds.first()._2.foreach(println)
+    {% endhighlight %}
+	</div>
+
+	<div class="code">
+		{% highlight scala %}
+��[ S c r i p t   I n f o ]   //IDEA控制台，更不明显
+		{% endhighlight %}
+	</div>
+	<div class="code">
+		{% highlight scala %}
+�
+�
+[
+ 
+S
+ 
+c
+ 
+r
+ 
+i
+ 
+p
+ 
+t
+ 
+ 
+ 
+I
+ 
+n
+ 
+f
+ 
+o
+ 
+]
+ 
+		{% endhighlight %}
+	</div>
+	<div class="stage-content">
+		在Notepad++中我也确认了一下，果然是UCS-2编码的文件。
+	</div>
+</p>
+
+<p class="stage">
+	<h3 class="subtitle3">再回到字符集和编码的定义</h3>
+	<div class="stage-content">
+		<h4 class="subtitle4">基本术语</h4>
+		<ul>
+			<li>
+				<b>字符(character):</b> 含有语义的最小单元， 比如a、b、中、国...
+			</li>
+			<li>
+				<b>字符集(character set):</b> 字符的集合，可能被用于多种语言，
+		比如拉丁字符集(The Latin character set)被用于英语和大多数的欧洲语言; 
+		而希腊字符集(The Greek character set)仅仅用于希腊语。 
+			</li>
+			<li>
+				<b>编码字符集(coded character set):</b> 每一个字符都对应到一个唯一数字的字符集, 比如ASCII, Unicode...
+			</li>
+			<li>
+				<b>码点(code point):</b> 或者叫做 码位(code position),码值， 是编码字符集中任意允许的数值，
+		ASCII中有128个码点,从00 到 7F；
+		扩展ASCII中有256个码点，从00 到 FF；
+		unicode有1114112个码点， 从00到10FFFF.
+			</li>
+			<li>
+				<b>码元(code unit):</b> 使用给定的编码形式(given encoding form)给每个字符
+					进行编码的位的序列(bit sequence)；
+					比如:
+					<ul>
+						<li>在US-ASCII中，一个码元由 7位组成；</li>
+						<li>在UTF-8, GB18030中，一个码元由 8位组成；</li>
+						<li>在UTF-16中，一个码元由 16位组成；</li>
+						<li>在UTF-32中，一个码元由 32位组成；</li>
+					</ul>
+					<br/>
+					比如字符串"abc𐐀", 其构成包括：
+					<ul>
+						<li>4个字符</li>
+						<li>4个码点</li>
+						<li>或者
+							<ol>
+								<li>在UTF-32中为4个码元(00000061, 00000062, 00000063, 00010400)</li>
+								<li>在UTF-16中为5个码元(0061, 0062, 0063, d801, dc00)</li>
+								<li>在UTF-8中为7个码元(61, 62, 63, f0, 90, 90, 80)</li>
+							</ol>
+						</li>
+					</ul>
+			</li>
+			<li>
+				<b>字库(Character repertoire):</b> 一个抽象的字符集，拥有超过百万的各种各样的字符， 包括拉丁、中文、韩文等等...
+			</li>
+			<li>
+				<b>编码(encoding):</b> 码点通过码元来表现，而两者的映射关系由编码(encoding)确定， 所以，一个码点对应到几个码元依赖于编码(encoding).
+			</li>
+			<li>
+				<b>字符编码：</b> 用某种编码系统(encoding system)来呈现字符库(a repertoire of characters)
+			</li>
+			<li>
+				<p>码元与码点的区别，主要是码点是从人的角度，属于十进制的概念；而码元则是码点转换为二进制格式，并且加入了特定编码格式的位序列；</p>
+				<p>字库是一种特殊的字符集，此次可以认为是为了实现计算机编码，由现实世界的字符集中抽取的一部分字符形成的特定编码支持的字符集合；</p>
+				<p>可以将Unicode系统看作一种非常庞大的字符集，而UTF-8, UTF-16, UTF-32则是基于Unicode字符集形成的不同的编码； 对于其他标准，比如ASCII, GB18030等，可以认为他们既是字符集也是编码方式，因为他们只有一种编码方式；</p>
+			</li>
+		</ul>
+	</div>
+	<div class="stage-content">
+		<h4 class="subtitle4">常见的编码及字符集列表</h4>
+		<ul>
+			<li>
+				早期二进制库包括：
+				<p>
+					<ol>
+						<li><b>摩尔斯电码(Morse code)</b>, 通过一系列电报键的长短组合表示拉丁字母、阿拉伯数字和一些其他的字符。
+						</li>
+						<li><b>博多码(Baudot code)</b>, 用于博多式电报机，该电报机有5个按键，可表示32(2<sup>5</sup>)个状态, 博多码由两套字符集，一套主要表示拉丁字母，另一套主要表示10个阿拉伯数字及十几个标点符号，并且每一套都包含一个切换到另一套的状态，两套字符集共能表示60多个博多码。
+						</li>
+						<li><b>培根密码(Bacon's cipher)</b>, 加密时，将每个拉丁字母转换成5个字幕A与B的组合，
+						比如a对应 AAAAA, d对应AAABB...<br/>
+						字母A和字母B分别选用不同字体， 然后将一段包含相同字数的假信息，按照AB字母对应的位置套用
+						相关字体从而形成加密， <br/>
+						比如"<b>T</b>o en<b>co</b>de <b>a</b> mes<b>s</b>age e<b>ac</b>h letter <b>of</b> the <b>pl</b>a<b>i</b>nt<b>ex</b>t <b>i</b>s replaced b<b>y a g</b>rou<b>p of f</b>i<b>ve</b> of <b>th</b>e lett<b>ers</b> <b>'A'</b> o<b>r 'B'</b>."<br/>其正常字体为A，粗体为B,解密后应为steganography.
+						<br/>
+						</li>
+						<li>
+							<b>盲文(Braille)</b>, 通过相关设备在纸张上制作出不同组合的凸点而组成，
+							在长方形区域分布两列，三排位置固定的六个点组成，每个点可以凸出或者不凸出，
+							形成64中可能；
+						</li>
+						<li>
+							<b>国际信号旗(International maritime signal flags)</b>,或称“国际海事信号旗”，
+							是一种船只间使用旗帜的通信系统， 不同的旗帜代表不同拉丁字母或者数字，每一面旗帜都有特殊含义，
+							多面旗帜可以组合使用。
+						</li>
+						<li>
+							<b>中文电码(Chinese telegraph code)</b>, 是第一个把汉字转化为电子信号的编码表，
+							关于第一版的中文电码的作者，维基不同词条上有法国驻华人员威基杰或者丹麦天文学家谢尔勒鲁普两种说法。<br/>
+							中文电码采用四位阿拉伯数字作为代号，从0001到9999表示最多一万个汉字、字母以及符号，汉字按照部首和比划排列，字母和符号放到电码表最尾。<br/>
+							中文电码使用每一页10×10个中文字符形成的词典，每个中文字符对应的电码分别由两位页数、一位行数和一位列数组成。<br/>
+							发送者根据中文电码本将待发送中文转换为4位电码，并使用摩尔斯电码传输，接收者将摩尔斯电码转换为数字序列，并以每4个数字分组，然后转换为中文字符。<br/>
+							当前中文电码通过添加第二字面，扩展了大量中文字符。
+						</li>
+						<li>
+							<b>Fieldata</b>, 一个6、7位码， 由美国陆军通信兵团在1950年代末采用。
+						</li>
+						<li>
+							<b>二进码十进数(Binary-coded decimal)</b>, 即BCD码， 是由IBM最早于1959年使用的6位编码，是一种十进制数字的编码形式， 由若干位(通常是4位或者8位)表示一个十进制数字，其主要优点是机器格式与人类可读格式之间的方便转换，以及十进制数的高精度表示。 <br/>
+							其缺点是增加了实现算数运算的电路的复杂度以及存储效率低。<br/>
+							在1963到1964年间，IBM在BCD编码基础上扩充形成了扩增二进制十进数交换码(EBCDIC, Extended Binary Coded Decimal Interchange Code)。
+						</li>
+					</ol>
+				</p>
+			</li>
+			<li>
+				ASCII码及扩展ASCII码
+				<p>
+					<ol>
+						<li>
+							<b>ASCII(American Standard Code for Information Interchange)</b>, 
+							也称为US-ASCII,1963年采用的7位编码包括字母、数字、符号和设备控制码等，共128个字符，
+							从诞生到现在，由于若干字符的变化，ASCII也升级了好几次。
+						</li>
+						<li>
+							<b>扩展ASCII码系列(Extended ASCII)</b>,并不特指某种编码，而是指基于ASCII码的7位，额外增加1位形成的其他编码，由于不同地区额外字符的需求和8位机出现，很多专用的扩展ASCII码被开发，最多可以支持256个字符，不同扩展ASCII码之间转换较为复杂甚至难以实现。
+							其中IBM开发的一种扩展ASCII码，采用代码页(code page)的方式，支持不同的语言，其低128位使用标准的ASCII码值，而高128位分成不同的代码页(每一页都有128个码值)。例如为北美使用的代码页437,主要支持法语、德语和一些其他欧洲语言的重音字符；
+							代码页850，主要在法语国家使用；
+							代码页737，则主要为英语和希腊语的组合。<br/>
+							之后很多高于8位的,支持更多字符的，但是兼容ASCII码的也可认为是扩展ASCII码。
+						</li>
+						<li>
+							<b>ISO 8859系列标准(ISO refers to International Organization for Standardization)</b>,由一系列标准组成(目前是有15个部分)，扩展自ASCII码，包括ISO 8859-1(Latin-1),其主要扩展了西欧文字和一些特殊字符，在Unicode出现之前，是很多浏览器的默认标准。其码点128-159保留作为控制符。
+							另外还有ISO 8859-2被用于东欧语言，ISO 8859-5则用于西里尔(Cyrillic)语言等等。
+						</li>
+						<li>
+							<b>Windows代码页(Windows code page)</b>, 主要在Microsoft Windows系统使用的一些列代码页的集合，主要分为两组：OEM(Original Equipment Manufacturer)和ANSI，这些代码页全部都属于扩展ASCII码。
+							<ul>
+								<li>
+									ANSI代码页系列，主要用于本地非Unicode的Windows的GUI的应用程序(a graphical user interface on Windows systems)，据称是基于提交给ANSI的草稿，但是ANSI以及ISO还没有标准化这些代码页，微软官方表示ANSI的称谓是一个误读，但当前已被广泛使用；
+								</li>
+								<li>
+									OEM代码页主要用在Win32控制台应用或者虚拟DOS系统，OEM最典型的代码页为437, 
+							另外代码页1258既是OEM代码页也是ANSI代码页，其主要支持越南语。（对于OEM代码页系列，维基Extended ASCII词条中Character encodings表将其与Windows code page并列为DOS code page）
+								</li>
+							</ul>
+						</li>
+						<li>
+							<b>ANSI(American National Standards Institute)</b>,大部分Windows系统采用的一种扩展ASCII码，ANSI是指代一系列Windows代码页,
+							基本上都是各种ISO 8859的标准的超集。
+							<ul>
+								<li>
+									其中1252是其中最典型的代码页，Windows-1252是ISO 8859-1的超集，主要使用了ISO 8859-1中的保留码点128-159的大部分作为打印字符。 
+								</li>
+								<li>另外对应ISO 8859-2的标准为Windows-1250;
+								</li>
+								<li>对应ISO 8859-5的位Windows-1251;
+								</li>
+							</ul>
+						</li>
+					</ol>
+				</p>
+			</li>
+			<li>
+				多字节编码，可以处理超过256个字符(使用多个字节表示一个字符，即8的倍数位)，比如EUC(Extended Unix Code)系列，大多数也是扩展自ASCII， 
+				除了Unicode系列之外，最典型的为CJKV(Chinese, Japanese, Korean, Vietnamese等东亚语言)字符,
+				<p>
+					<ol>
+						<li>
+							<b>中文</b>， 字符数量在3000到40000, Unicode 5.0中有大概70000个中文字符，
+							中国政府(RPC)使用GB18030(GB为中文“国标”的拼音)作为主要的字符集，取代GB2312,
+							并且兼容GB2312, GBK1.0, CP936(Windows code page)，
+							其同时支持简体中文及繁体中文， 其与Unicode也有映射关系。
+							<p>台湾、香港和澳门地区主要使用Big5作为中文字符编码，其主要支持繁体中文。</p>
+							<p>EUC-CN为对应的EUC系列中文标准。</p>
+							<p>EUC-TW为对应的EUC系列台湾标准。</p>
+							<p>
+								GB2312是使用双字节的中文编码，并且两个字节都大于127.第一个字节叫做高字节，从0xA1到0xF7, 第二个字节叫做低字节，从0xA1到0xFE，共包括7000多的简体中文、数学符号、罗马希腊字母、日文假名等。原来在ASCII里的数字、标点、字母也编了两个字节长的编码，及“全角”字符，而原来的ASCII中的则为“半角”。
+							</p>
+							<p>
+								GBK是在GB2312基础上，取消了低字节是127以上的限制，只保留高字节为大于127，其包括了所以GB2312的内容，同时又增加了近20000个新的中文，包括繁体和一些符号。
+							</p>
+							<p>
+								GB18030是在GBK基础上，增加了数千个少数民族文字形成的。
+							</p>
+							<p>
+								GB2312,GBK,GB18030统称为DBCS(Double Byte Charecter Set 即双字节字符集)，在这些编码中，一个中文字符的字符长度为2(在Unicode系统中，一个中文字符的字符长度为1)。
+							</p>
+						</li>
+						<li>
+							<b>日文</b>，日本本土的Shift-JIS, Windows使用代码页932作为日文系统编码，另外EUC系统的EUC-JP, 用来呈现三个日文字符集标准中的元素, 也称为Unixized JIS(or UJIS)， AT&T JIS, 以及代码页954(IBM);
+						</li>
+						<li>
+							<b>韩文</b>， Windows使用代码页949， 对应EUC-KR， IBM代码页970。
+						</li>
+					</ol>
+				<p>
+			</li>
+			<li>
+				Unicode(Universal Coded Character Set 即UCS)系列, Unicode是一种编码字符集， 用‘U+’作为前缀使用16进制表示其值(即码点)， 
+				其码点的范围从U+0000到U+10FFFF, 其被分成了17个部分(planes)，
+				一个基本多语言部分(basic multilingual plane)，范围从U+0000到U+FFFF(plane 0),
+				和16个增补部分(supplementary planes),
+				每个部分都有65536(2<sup>16</sup>)个码位;
+				<p>
+					Unicode常用的编码方式有UTF-8, UTF-16, UTF-32, UTF即Unicode transformation format.
+				</p>
+				<ol>
+					<li>
+						<b>UTF-8</b>, 被大部分网站所使用，对前128个码点使用1字节，对于其他字符，最多到4字节，前128个Unicode码点和ASCII字符完全一致，即可以认为ASCII文本同时也是UTF-8的文本。
+						UTF-8的详细编码规则见下表(来自于UTF-8 - Wikipedia):
+						<p>
+							<table class="ref-table">
+								<tr>
+								<th>Number<br />
+								of bytes</th>
+								<th>Bits for<br />
+								code point</th>
+								<th>First<br />
+								code point</th>
+								<th>Last<br />
+								code point</th>
+								<th>Byte 1</th>
+								<th>Byte 2</th>
+								<th>Byte 3</th>
+								<th>Byte 4</th>
+								</tr>
+								<tr>
+								<td style="text-align: center;">1</td>
+								<td style="text-align: center;">7</td>
+								<td style="text-align: right;">U+0000</td>
+								<td style="text-align: right;">U+007F</td>
+								<td><code>0xxxxxxx</code></td>
+								<td style="background: darkgray;"></td>
+								<td style="background: darkgray;"></td>
+								<td style="background: darkgray;"></td>
+								</tr>
+								<tr>
+								<td style="text-align: center;">2</td>
+								<td style="text-align: center;">11</td>
+								<td style="text-align: right;">U+0080</td>
+								<td style="text-align: right;">U+07FF</td>
+								<td><code>110xxxxx</code></td>
+								<td><code>10xxxxxx</code></td>
+								<td style="background: darkgray;"></td>
+								<td style="background: darkgray;"></td>
+								</tr>
+								<tr>
+								<td style="text-align: center;">3</td>
+								<td style="text-align: center;">16</td>
+								<td style="text-align: right;">U+0800</td>
+								<td style="text-align: right;">U+FFFF</td>
+								<td><code>1110xxxx</code></td>
+								<td><code>10xxxxxx</code></td>
+								<td><code>10xxxxxx</code></td>
+								<td style="background: darkgray;"></td>
+								</tr>
+								<tr>
+								<td style="text-align: center;">4</td>
+								<td style="text-align: center;">21</td>
+								<td style="text-align: right;">U+10000</td>
+								<td style="text-align: right;">U+10FFFF</td>
+								<td><code>11110xxx</code></td>
+								<td><code>10xxxxxx</code></td>
+								<td><code>10xxxxxx</code></td>
+								<td><code>10xxxxxx</code></td>
+								</tr>
+								</table>
+						</p>
+					</li>
+					<li>
+						<b>UTF-16</b>, 与UTF-8一样，也是变长的编码方式，码点被编码为1个或2个16位的码元，
+						UTF-16的前身为UCS-2(固定2字节的UCS编码，不能完全实现当前的Unicode字符集)；
+						<p>
+							UTF-16根据双字节中两个字节的位置不同，而细分成UTF-16BE(big-endian)和UTF-16LE(little-endian)，UTF-16(如有BOM，根据BOM确定，否则默认大端， Windows系统默认小端),
+							同样，UCS-2也分UCS-2BE和UCS-2LE。
+						</p>
+						<p>
+							在超过一个字节存储在计算机中时，将最重要的字节(most significant byte即MSB)存储在前或者后的不同，分别叫做大端(big-endian)和小端(little-endian)。在数据交换时，因为发送方和接受方可能使用不同的显示顺序，可能会导致显示错误，针对这种情况，UTF-16使用BOM(Byte Order Mark，即0xFEFF/0xFFFE，0宽度，非字符，置于实际数据流前，0xFEFF表示大端， 0xFFFE表示小端)来告知接收方数据是否需要进行转制。
+						</p>
+						<p>
+							如果一个UTF-16编码的文本本身，没有携带BOM, RFC 2781协议规定应默认为大端，但在Windows系统中则默认为小端。
+						</p>
+						<p>
+							由于UTF-8为面向字节的编码，并没有这种问题(还有待理解，对于UTF-8中多字节的和UTF-16有什么区别)，但是尽管如此，有时也可能有一个初始化的BOM(EF BB BF)表示数据流为UTF-8编码的数据。
+						</p>
+						<p>
+							如下表为UTF-16的转换事例(来自UTF-16 - Wikipedia)：
+						</p>
+						<p>
+							<table class="ref-table">
+								<tr>
+								<th colspan="2">Character</th>
+								<th>Binary code point</th>
+								<th>Binary UTF-16</th>
+								<th>UTF-16 hex<br />
+								code units</th>
+								<th>UTF-16BE<br />
+								hex bytes</th>
+								<th>UTF-16LE<br />
+								hex bytes</th>
+								</tr>
+								<tr>
+								<td><a href="/wiki/$" class="mw-redirect" title="$">$</a></td>
+								<td><code>U+0024</code></td>
+								<td align="right"><code><span style="color: #0070FF;">0000 0000 0010 0100</span></code></td>
+								<td align="right"><code><span style="color: #0070FF;">0000 0000 0010 0100</span></code></td>
+								<td align="right"><code><span style="color: #0070FF;">0024</span></code></td>
+								<td align="right"><code><span style="color: #0070FF;">00 24</span></code></td>
+								<td align="right"><code><span style="color: #0070FF;">24 00</span></code></td>
+								</tr>
+								<tr>
+								<td><a href="/wiki/Euro_sign" title="Euro sign">€</a></td>
+								<td><code>U+20AC</code></td>
+								<td align="right"><code><span style="color: #0070FF;">0010 0000 1010 1100</span></code></td>
+								<td align="right"><code><span style="color: #0070FF;">0010 0000 1010 1100</span></code></td>
+								<td align="right"><code><span style="color: #0070FF;">20AC</span></code></td>
+								<td align="right"><code><span style="color: #0070FF;">20 AC</span></code></td>
+								<td align="right"><code><span style="color: #0070FF;">AC 20</span></code></td>
+								</tr>
+								<tr>
+								<td><a href="/wiki/%F0%90%90%8F" class="mw-redirect" title="𐐏">𐐷</a></td>
+								<td><code>U+10437</code></td>
+								<td align="right"><code><span style="color: #00AA00;">0001 0000 01</span><span style="color: #0070FF;">00 0011 0111</span></code></td>
+								<td align="right"><code>1101 10<span style="color: #00AA00;">00 0000 0001</span> 1101 11<span style="color: #0070FF;">00 0011 0111</span></code></td>
+								<td align="right"><code><span style="color: #00AA00;">D801</span> <span style="color: #0070FF;">DC37</span></code></td>
+								<td align="right"><code><span style="color: #00AA00;">D8 01</span> <span style="color: #0070FF;">DC 37</span></code></td>
+								<td align="right"><code><span style="color: #00AA00;">01 D8</span> <span style="color: #0070FF;">37 DC</span></code></td>
+								</tr>
+								<tr>
+								<td><a href="https://en.wiktionary.org/wiki/%F0%A4%AD%A2" class="extiw" title="wikt:𤭢">𤭢</a></td>
+								<td><code>U+24B62</code></td>
+								<td align="right"><code><span style="color: #00AA00;">0010 0100 10</span><span style="color: #0070FF;">11 0110 0010</span></code></td>
+								<td align="right"><code>1101 10<span style="color: #00AA00;">00 0101 0010</span> 1101 11<span style="color: #0070FF;">11 0110 0010</span></code></td>
+								<td align="right"><code><span style="color: #00AA00;">D852</span> <span style="color: #0070FF;">DF62</span></code></td>
+								<td align="right"><code><span style="color: #00AA00;">D8 52</span> <span style="color: #0070FF;">DF 62</span></code></td>
+								<td align="right"><code><span style="color: #00AA00;">52 D8</span> <span style="color: #0070FF;">62 DF</span></code></td>
+								</tr>
+								</table>
+						</p>
+					</li>
+					<li>
+						<b>UTF-32</b>,每个Unicode的码点都使用32位(4字节)定长方式进行编码， 不同于UTF-8和UTF-16需要控制位，每个UTF-32中的32位码元值都直接等于码点数值。
+						其前身为UCS-4。
+						<p>
+							与UTF-16类似，UTF-32也分成大端和小端，分别使用00 00 FE FF和FF FE 00 00作为BOM。
+						</p>
+					</li>
+					<li>
+						UTF-8是最广泛应用于网络上的编码方式。 UTF-16则多被用于Java和Windows。 UTF-8和UTF-32多被用于Linux和各种Unix系统。他们之间的转换都是基于算法的，快速而且无损。
+					</li>
+					<li>
+						UTF-8相比于UTF-16, UTF-32更能节省内存空间、存储空间、网络带宽，而UTF-16和UTF-32相比UTF-8，在处理性能方面有优势。
+					</li>
+				</ol>
+			</li>
+		</ul>
+
+		<h4 class="subtitle4">其他说明</h4>
+		<ul>
+			<li>由于不同编码(字符集)的相同码点代表的含义不同，为了正确解析、显示、传输文本时(尤其是码点128以上，128以下大部分常用编码都支持ASCII码)，软硬件在读取文本时必须使用指定的编码，否则可能导致显示错误。</li>
+		</ul>
+	</div>
+</p>
+
+<p class="stage">
+	<h3 class="subtitle3">问题该如何解决</h3>
+	<div class="stage-content">
+	</div>
+</p>
+
+<p class="stage">
+	<h3 class="subtitle3">参考地址</h3>
+	<div class="stage-content">
+		<ul class="ref-lst">
+			<li><a href="https://en.wikipedia.org/wiki/Character_encoding">Character encoding - Wikipedia</a></li>
+			<li><a href="https://en.wikipedia.org/wiki/Code_point">Code point - Wikipedia</a></li>
+			<li><a href="https://en.wikipedia.org/wiki/ASCII">ASCII - Wikipedia</a></li>
+			<li><a href="https://en.wikipedia.org/wiki/Extended_ASCII">Extended ASCII - Wikipedia</a></li>
+			<li><a href="https://en.wikipedia.org/wiki/ISO/IEC_8859">ISO/IEC 8859 - Wikipedia</a>
+			</li>
+			<li><a href="https://en.wikipedia.org/wiki/Windows_code_page">Windows code page - Wikipedia</a>
+			</li>
+			<li><a href="https://en.wikipedia.org/wiki/Windows-1252">Windows-1252 - Wikipedia</a>
+			</li>
+			<li><a href="https://en.wikipedia.org/wiki/Windows-1250">Windows-1250 - Wikipedia</a>
+			</li>
+			<li><a href="https://en.wikipedia.org/wiki/Extended_Unix_Code">Extended Unix Code - Wikipedia</a>
+			</li>
+			<li><a href="https://en.wikipedia.org/wiki/CJK_characters">CJK characters - Wikipedia</a>
+			</li>
+			<li><a href="https://en.wikipedia.org/wiki/GB_18030">GB 18030 - Wikipedia</a>
+			</li>
+			<li><a href="https://en.wikipedia.org/wiki/Big5">Big5 - Wikipedia</a>
+			</li>
+			<li><a href="https://en.wikipedia.org/wiki/Unicode">Unicode - Wikipedia</a>
+			</li>
+			<li><a href="https://en.wikipedia.org/wiki/UTF-8">UTF-8 - Wikipedia</a>
+			</li>
+			<li><a href="https://en.wikipedia.org/wiki/UTF-16">UTF-16 - Wikipedia</a>
+			</li>
+			<li><a href="https://en.wikipedia.org/wiki/UTF-32">UTF-32 - Wikipedia</a>
+			</li>
+			<li><a href="http://unicode.org/faq/utf_bom.html">UTF-8, UTF-16, UTF-32 & BOM</a>
+			</li>
+			<li><a href="https://juejin.im/post/5a4aeae96fb9a04512394e12">UTF-8 UTF-16 UTF-32 比较</a>
+			</li>
+			<li><a href="http://www.imkevinyang.com/2009/02/%E5%AD%97%E7%AC%A6%E7%BC%96%E8%A7%A3%E7%A0%81%E7%9A%84%E6%95%85%E4%BA%8B%EF%BC%88ascii%EF%BC%8Cansi%EF%BC%8Cunicode%EF%BC%8Cutf-8%E5%8C%BA%E5%88%AB%EF%BC%89.html">字符编解码的故事</a>
+			</li>
+			<li><a href="http://cenalulu.github.io/linux/character-encoding/">十分钟搞清字符集和字符编码</a>
+			</li>
+			<li><a href="http://www.differencebetween.net/technology/web-applications/difference-between-ansi-and-ascii/">Difference Between ANSI and ASCII</a></li>
+			<li><a href="http://www.globaliconnect.com/excel/index.php?option=com_content&view=article&id=116:ascii-code-extended-ascii-characters-8-bit-system-and-ansi-code&catid=78&Itemid=474">ASCII Code, Extended ASCII characters (8-bit system) and ANSI Code.</a></li>
+		</ul>
+	</div>
 </p>

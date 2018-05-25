@@ -1,7 +1,11 @@
 html, body {
 	margin: 0;
 	padding: 0;
-	font-size: 20px;
+	font-family: -apple-system,SF UI Text,Arial,PingFang SC,Hiragino Sans GB,Microsoft YaHei,WenQuanYi Micro Hei,sans-serif;
+	font-size: 16px;
+	font-weight: 400;
+	line-height: 1.7;
+	color: #2f2f2f;
 }
 
 /*body {
@@ -15,42 +19,51 @@ body {
 }
 
 #banner {
-	height: 200px;
-	padding: 20px;
-	background: #fff url("/assets/img/flower.jpg") bottom left no-repeat;
-	background-size: 50% 80%;
+	height: 60px;
+	padding: 10px 40px;
+	background-color: white;
+	/*background: #fff url("/assets/img/flower.jpg") bottom left no-repeat;
+	background-size: 50% 80%; */
 }
 
 .banner-content {
-	width: 50%;
-	float: right;
+	border-bottom: 1px solid #FF5511;
 }
 
 #container {
-	width: 60%;
+	width: 80%;
 	margin-left: auto;
 	margin-right: auto;
 }
 
 #banner p {
+	height: 60px;
+	vertical-align: middle;
 	min-width: 500px;
-	margin-left: auto;
-	margin-right: auto;
+	margin: 0;
+	padding: 0;
+	color: #FF5511;
 }
 
 #banner .title{
+	display: none;
 	font-family: "Comic Sans MS", cursive, sans-serif;
-	font-size: 35px;
+	background-color: white;
+	/*font-size: 35px;*/
 }
 
 #banner .description {
-	font-family: Arial, "Microsoft YaHei";
+	font-size: 24px;
 }
 
 #center {
 	margin-left: auto;
 	margin-right: auto;
 	background-color: #fff;
+}
+
+#center-main {
+	padding: 20px;
 }
 
 .clear {
@@ -68,7 +81,7 @@ body {
 }
 
 .section {
-	padding: 20px;
+	padding: 20px 0;
 }
 
 .section-name {
@@ -169,3 +182,35 @@ a {
 	height: 50px;
 }
 
+.stage-content {
+	margin: 20px;
+}
+
+li {
+	line-height: 30px;
+}
+
+.code {
+	margin: 20px;
+	max-height: 400px;
+	overflow: auto;
+	background-color: #122b3b;
+}
+
+.ref-lst a{
+	color: #00BBFF;
+	font-size: 14px;
+}
+
+.ref-table {
+	border-collapse: collapse;
+	border: solid 1px #aaa;
+}
+
+.ref-table th, .ref-table td {
+	border: solid 1px #aaa;
+}
+
+.subtitle3 {
+	color: #FF4500;
+}
