@@ -1,3 +1,24 @@
+/*@font-face {
+	font-family: 'SingleMaltaRegular';
+	src:url('../assets/font/singlemalta.eot');
+	src:url('../assets/font/singlemalta.eot?#iefix') format('embedded-opentype'),
+		url('../assets/font/singlemalta.woff') format('woff'), 
+		url('../assets/font/singlemalta.woff') format('woff2'), 
+		url('../assets/font/singlemalta.ttf') format('truetype'),
+		url('../assets/font/singlemalta.svg#SingleMaltaRegular') format('svg');
+	font-weight: normal;
+	font-style: normal;
+}*/
+
+@font-face {
+      font-family: 'SingleMaltaRegular';
+      src: url('/assets/font/singlemalta.eot');
+      src: url('/assets/font/singlemalta.eot?#iefix') format('embedded-opentype'),
+           url('/assets/font/SingleMalta.woff') format('woff'),
+	   url('/assets/font/SingleMalta.ttf') format('truetype'),
+	   url('/assets/font/singlemalta.svg#SingleMaltaRegular') format('svg');
+   }
+
 html, body {
 	margin: 0;
 	padding: 0;
@@ -47,13 +68,13 @@ body {
 
 #banner .title{
 	display: none;
-	font-family: Marker Felt, fantasy;
+	font-family: Impact, Times New Roman;
 	background-color: white;
 	/*font-size: 35px;*/
 }
 
 #banner .description {
-	font-family: "Helvetica Neue",Helvetica,Arial,"Microsoft Yahei","Hiragino Sans GB","Heiti SC","WenQuanYi Micro Hei",sans-serif;
+	font-family: 'SingleMaltaRegular', Courier New, Times New Roman;
 	font-size: 20px;
 	font-weight: bolder;
 }
@@ -222,4 +243,30 @@ li {
 
 .subtitle3 {
 	color: #FF4500;
+}
+
+.eng-help:before {
+	display: inline-block;
+	margin-right: 10px;
+	padding:0 10px;
+	border-radius: 10px;
+	font-size: 12px;
+	content: attr(data-class);
+	background-color: #f33;
+	color: #fff;
+}
+
+.statement {
+	color: red;
+}
+
+.statement:before {
+	display: inline-block;
+	margin-right: 10px;
+	padding: 0 10px;
+	border-radius: 10px;
+	font-size: 12px;
+	content: "声明";
+	background-color: #00c;
+	color: #fff;
 }
