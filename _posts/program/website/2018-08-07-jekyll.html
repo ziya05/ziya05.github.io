@@ -1,0 +1,41 @@
+---
+layout: post
+title: jekyll
+description: jekyll基本内容
+categories: [program, website]
+slug: jekyll
+---
+
+<h2>常用命令</h2>
+
+<p>
+	<a href="https://jekyllcn.com/">jekyll的官方地址(中文)</a>
+</p>
+
+<ul>
+	<li><b>jekyll build:</b> 当前文件夹中的内容将会 生成到 ./_site 文件夹中</li>
+	<li>jekyll build后可以指定源目录以及目标目录， 格式为
+		jekyll build --source $amp;source$amp; --destination $amp;destionation$amp;
+	</li>
+	<li>
+		<b>jekyll build --watch:</b>
+		执行一次命令即可， jekyll程序不会退出，将监视内容变更，
+		之后的改动将会自动生成
+	</li>
+	<li>
+		<b>jekyll serve:</b>
+		改命令除了会监控变更之外， 还提供一个开发服务器，
+		通过http://localhost:4000/可以访问
+	</li>
+	<li>
+		<b>jekyll serve --detach:</b>
+		该命令与jekyll serve相同， 只是会在后台运行。
+		可以使用 kill -9 <进程id>关闭。
+		本人在本地测试之后， 发现并没有后台运行。
+	</li>
+	<li>
+		<b>jekyll serve --no-watch:</b>
+		与jekyll serve一样， 不过不会自动监控变化。
+	</li>
+</ul>
+
